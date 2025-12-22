@@ -87,10 +87,10 @@ class Player:
         else:
             self.frame = 0
 
-        self.pos.x = max(0, min(self.WIDTH - 32, self.pos.x))
-        self.pos.y = max(0, min(self.HEIGHT - 32, self.pos.y))
-
-    def draw(self):
+    def draw(self, cam_x, cam_y):
         sprite = self.animations[self.direction][self.frame].copy()
         sprite.set_alpha(self.alpha)
-        self.screen.blit(sprite, self.pos)
+        self.screen.blit(
+            sprite,
+            (self.pos.x - cam_x, self.pos.y - cam_y)
+        )
