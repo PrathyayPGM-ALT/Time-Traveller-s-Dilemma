@@ -3,6 +3,12 @@ from cutscene1 import Cutscene1
 from player import Player
 from timemachine import TimeMachine
 
+def camera_offset(target_pos, screen_width, screen_height):
+    return (
+        int(target_pos.x - screen_width // 2),
+        int(target_pos.y - screen_height // 2)
+    )
+
 def wrap_text(text, font, max_width):
     words = text.split(" ")
     lines = []
@@ -89,8 +95,14 @@ while running:
         if not dialog_active:
             player.update(keys, [machine.rect])
 
-        machine.draw(screen)
-        player.draw()
+        cam_x, cam_y = camera_offset(player.pos, WIDTH, HEIGHT)
+
+        screen.blit(
+            machine.image,
+            (machine.rect.x - cam_x, machine.rect.y - cam_y)
+        )
+
+        player.draw(cam_x, cam_y)
 
         near_machine = player.rect().colliderect(machine.interact_rect)
 
