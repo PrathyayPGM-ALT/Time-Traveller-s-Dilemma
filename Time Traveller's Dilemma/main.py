@@ -2,28 +2,13 @@ import pygame
 from cutscene1 import Cutscene1
 from player import Player
 from timemachine import TimeMachine
+from npc import NPC
 
 def camera_offset(target_pos, screen_width, screen_height):
     return (
         int(target_pos.x - screen_width // 2),
         int(target_pos.y - screen_height // 2)
     )
-
-def wrap_text(text, font, max_width):
-    words = text.split(" ")
-    lines = []
-    current = ""
-
-    for word in words:
-        test = current + word + " "
-        if font.size(test)[0] <= max_width:
-            current = test
-        else:
-            lines.append(current)
-            current = word + " "
-
-    lines.append(current)
-    return lines
 
 
 WIDTH, HEIGHT = 1000, 800
@@ -39,6 +24,9 @@ font = pygame.font.Font("fonts/IBMPlexMono-Regular.ttf", 20)
 cutscene = Cutscene1(screen, font, WIDTH, HEIGHT)
 player = Player(screen, WIDTH, HEIGHT)
 machine = TimeMachine(WIDTH, HEIGHT)
+
+npcs = []
+npc_active = None
 
 state = "cutscene"
 timeline = "present"
@@ -72,9 +60,15 @@ while running:
             if event.key == pygame.K_e:
                 interact_pressed = True
 
-            if event.key == pygame.K_RETURN and dialog_active:
-                dialog_active = False
-                interact_cooldown = 20
+            if event.key == pygame.K_RETURN:
+                if dialog_active:
+                    dialog_active = False
+                    interact_cooldown = 20
+                elif npc_active:
+                    npc_active.advance()
+                    if not npc_active.active:
+                        npc_active = None
+                        interact_cooldown = 20
 
     if state == "cutscene":
         screen.fill((0, 0, 0))
@@ -92,7 +86,7 @@ while running:
 
         keys = pygame.key.get_pressed()
 
-        if not dialog_active:
+        if not dialog_active and not npc_active:
             player.update(keys, [machine.rect])
 
         cam_x, cam_y = camera_offset(player.pos, WIDTH, HEIGHT)
@@ -102,48 +96,58 @@ while running:
             (machine.rect.x - cam_x, machine.rect.y - cam_y)
         )
 
+        if timeline == "past":
+            for npc in npcs:
+                npc.update()
+                npc.draw(screen, cam_x, cam_y)
+
         player.draw(cam_x, cam_y)
 
         near_machine = player.rect().colliderect(machine.interact_rect)
 
-        if near_machine and not dialog_active:
-            prompt_color = (0, 0, 0) if timeline == "present" else (255, 255, 255)
-            prompt = font.render("Press E", True, prompt_color)
-            screen.blit(
-                prompt,
-                (WIDTH // 2 - prompt.get_width() // 2, HEIGHT // 2 + 90)
-            )
+        if timeline == "present" and near_machine and not dialog_active:
+            prompt = font.render("Press E", True, (0, 0, 0))
+            screen.blit(prompt, (WIDTH // 2 - prompt.get_width() // 2, HEIGHT // 2 + 90))
 
-        if interact_pressed and near_machine and not dialog_active and interact_cooldown == 0:
-            if timeline == "present":
+        if interact_pressed and not dialog_active and not npc_active and interact_cooldown == 0:
+            if timeline == "present" and near_machine:
                 fade_active = True
                 fade_alpha = 0
                 timeline = "past"
-            else:
-                dialog_active = True
-                dialog_counter = 0
+
+                px, py = player.pos
+                npcs = [
+                    NPC(1, px + 400, py - 200),
+                    NPC(2, px - 600, py + 300),
+                    NPC(3, px + 200, py + 500),
+                    NPC(1, px - 300, py - 500),
+                    NPC(2, px + 700, py + 100)
+                ]
+
+            elif timeline == "past":
+                for npc in npcs:
+                    if npc.try_interact(player.rect()):
+                        npc_active = npc
+                        break
+
+                if near_machine and not npc_active:
+                    dialog_active = True
+                    dialog_counter = 0
+
+        if npc_active:
+            npc_active.draw_dialogue(screen, font, WIDTH, HEIGHT)
 
         if dialog_active:
             if dialog_counter < dialog_speed * len(dialog_text):
                 dialog_counter += 1
 
-            box_width = WIDTH - 200
-            box_height = 120
-            box_x = 100
-            box_y = HEIGHT - 160
-
-            box = pygame.Surface((box_width, box_height))
+            box = pygame.Surface((WIDTH - 200, 120))
             box.fill((40, 40, 40))
-            screen.blit(box, (box_x, box_y))
+            screen.blit(box, (100, HEIGHT - 160))
 
-            visible_text = dialog_text[:dialog_counter // dialog_speed]
-            lines = wrap_text(visible_text, font, box_width - 40)
-
-            y = box_y + 20
-            for line in lines:
-                rendered = font.render(line, True, (255, 255, 255))
-                screen.blit(rendered, (box_x + 20, y))
-                y += font.get_height() + 4
+            visible = dialog_text[: dialog_counter // dialog_speed]
+            rendered = font.render(visible, True, (255, 255, 255))
+            screen.blit(rendered, (120, HEIGHT - 120))
 
     if fade_active:
         fade_alpha += 8
