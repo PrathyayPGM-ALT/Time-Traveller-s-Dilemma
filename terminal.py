@@ -38,7 +38,6 @@ class TerminalModal:
         self.font = config.font(18)
         self.maxlen = 52
 
-    # -- input -----------------------------------------------------------
     def _prompt(self):
         return f"{self.host}:~$ "
 
@@ -57,7 +56,6 @@ class TerminalModal:
             if ch and 32 <= ord(ch) < 127 and len(self.input) < self.maxlen:
                 self.input += ch
 
-    # -- command processing ---------------------------------------------
     def _echo(self, s=""):
         self.lines.append(s)
 
@@ -102,7 +100,6 @@ class TerminalModal:
             if self.success_pending <= 0:
                 self.done = "success"
 
-    # -- draw ------------------------------------------------------------
     def draw(self, screen):
         W, H = config.WIDTH, config.HEIGHT
         ui.scrim(screen, pygame.Rect(0, 0, W, H), 190)

@@ -73,7 +73,6 @@ def bar(screen, rect, frac, fill, back=(36, 34, 26), border=(90, 76, 36)):
     inner = pygame.Rect(rect.x, rect.y, int(rect.w * max(0, min(1, frac))), rect.h)
     pygame.draw.rect(screen, fill, inner, border_radius=3)
     pygame.draw.rect(screen, border, rect, 1, border_radius=3)
-    # tick marks
     for i in range(1, 5):
         x = rect.x + rect.w * i // 5
         pygame.draw.line(screen, (0, 0, 0), (x, rect.y), (x, rect.bottom), 1)

@@ -10,7 +10,6 @@ import random
 
 import config
 
-# ---------------------------------------------------------------------------
 SPEAKERS = {
     "boss":       ("THE BOSS", "textures/boss.png", config.BLOOD),
     "titor":      ("TIMETRAVEL_0", "textures/npc1.png", config.TITOR),
@@ -38,9 +37,6 @@ def _ordinal(n):
     return f"{n}{suf}"
 
 
-# ---------------------------------------------------------------------------
-# The boss
-# ---------------------------------------------------------------------------
 BOSS_INTRO = [
     say("boss", "There you are. I almost missed you — you wear that body so loosely."),
     say("boss", "Prisoner 7. No, you don't remember the name they gave you. Good — remembering is for people with futures."),
@@ -70,8 +66,6 @@ def boss_intro(flags):
     return lines
 
 
-# Return lines vary so the hub never feels like a stuck record. The Troi is
-# only referenced once the player has actually crossed it (visits > 0).
 HUB_SUBTITLES = [
     "The earth is a spoil. The machine hums anyway.",
     "Post-war, post-everything. Mostly just post.",
@@ -80,14 +74,14 @@ HUB_SUBTITLES = [
     "Cold concrete, colder company.",
 ]
 
-RETURN_FIRST = [   # straight after orientation — never been out, no Troi yet
+RETURN_FIRST = [
     "Orientation survived. I'm nearly impressed. Nearly.",
     "There — you can move, press, and type. The bar was on the floor; you cleared it.",
     "No, you haven't travelled yet. Yes, it gets worse. Choose a year.",
     "The machine is warm. You are not ready. These rarely align in your favour.",
 ]
 
-RETURN_BACK = [   # back from a mission, having crossed the Troi
+RETURN_BACK = [
     "Back. The Troi spat you out again — it never did have taste.",
     "Still wearing that body. The Troi's standards are famously low.",
     "You returned. Statistically, one of these times you won't.",
@@ -120,9 +114,6 @@ BOSS_ALL_DONE = [
     say("boss", "And now you know. Which means it's time to forget again. Step into the machine."),
 ]
 
-# ---------------------------------------------------------------------------
-# The Troi
-# ---------------------------------------------------------------------------
 TROI_WHISPERS = [
     "you've stood here before",
     "i know your walk",
@@ -163,9 +154,6 @@ def troi_floaters(flags):
     return min(base, 18)
 
 
-# ---------------------------------------------------------------------------
-# Trapped in the Troi (the Keepers caught you)
-# ---------------------------------------------------------------------------
 TRAPPED_INTRO = [
     "The Keepers took you.",
     "There is no rift here. Not for you. Not anymore.",
@@ -173,7 +161,6 @@ TRAPPED_INTRO = [
     "(There is no way out but to stop. Press Q or Esc when you can bear no more.)",
 ]
 
-# Fixed in-world narrator lines.
 NARR_KEEPER_WATCH = "Something in this year has started to watch you."
 NARR_KEEPER_SPAWN = "Time Keepers. Get to a rift. Do not let them touch you."
 NARR_LEAVE = "Leaving with the work undone. The boss will smile. He always smiles."
@@ -210,13 +197,7 @@ def trapped_voices(flags):
     return voices
 
 
-# ===========================================================================
-# ERA SPECS — each is a deduction puzzle: a cryptic DIRECTIVE, CLUE objects you
-# must find and read, and a code LOCK you solve. No coordinates (worldgen lays
-# it out); no arrows pointing at the answer.
-# ===========================================================================
 ERAS = {
-    # ---------------------------------------------------------------- 2001
     "2001": {
         "year": "2001", "theme": "cafe",
         "title": "The Glow of a Dying Web",
@@ -277,7 +258,6 @@ ERAS = {
         ],
     },
 
-    # ---------------------------------------------------------------- 1998
     "1998": {
         "year": "1998", "theme": "garage",
         "title": "A Photograph of a Boy",
@@ -328,7 +308,6 @@ ERAS = {
         ],
     },
 
-    # ---------------------------------------------------------------- 1683
     "1683": {
         "year": "1683", "theme": "observatory",
         "title": "The Year the Sky Was Watched",
@@ -376,7 +355,6 @@ ERAS = {
         ],
     },
 
-    # ---------------------------------------------------------------- 3744
     "3744": {
         "year": "3744", "theme": "ruin",
         "title": "Rehearsal for an Ending",
@@ -426,7 +404,6 @@ ERAS = {
         ],
     },
 
-    # ------------------------------------------------------------- 24567 BC
     "24567 BC": {
         "year": "24567 BC", "theme": "cave",
         "title": "Where the Spiral Was Drawn First",
@@ -479,9 +456,6 @@ ERAS = {
 ERA_ORDER = ["2001", "1998", "1683", "3744", "24567 BC"]
 
 
-# ---------------------------------------------------------------------------
-# Achievements — stored in the soul (persist across lives). check(flags) -> bool
-# ---------------------------------------------------------------------------
 ACHIEVEMENTS = [
     {"id": "titor", "name": "Titor's-traveller",
      "desc": "Beat the 2001 timeline.",
@@ -501,7 +475,6 @@ ACHIEVEMENTS = [
     {"id": "panic", "name": "Total Panic",
      "desc": "Slip away from the Time Keepers and escape a timeline.",
      "check": lambda f: f["escaped_keepers"]},
-    # There is no escape from the Troi. There was never an escape.
     {"id": "escape_troi", "name": "What",
      "desc": "Escape the Troi after the Keepers take you.",
      "check": lambda f: False},

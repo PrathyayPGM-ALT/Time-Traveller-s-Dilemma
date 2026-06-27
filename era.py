@@ -26,7 +26,6 @@ from timekeeper import TimeKeeper
 from textutil import wrap_text
 
 
-# ---------------------------------------------------------------------------
 class Interactable:
     """A static thing you can press E on (terminal, notice, rift, ...)."""
 
@@ -34,14 +33,14 @@ class Interactable:
         self.id = d["id"]
         self.rect = pygame.Rect(d["x"], d["y"], d["w"], d["h"])
         self.label = d["label"]
-        self.kind = d.get("kind", "task")        # task | lore | exit
+        self.kind = d.get("kind", "task")
         self.prop = d.get("prop", "console")
         self.lines = d.get("lines", [])
         self.risky = d.get("risky", False)
         self.gives = d.get("gives")
         self.solid = d.get("solid", True)
-        self.terminal = d.get("terminal")   # optional minigame config
-        self.take = d.get("take")           # item you can steal from it (or None)
+        self.terminal = d.get("terminal")
+        self.take = d.get("take")
         self.used = False
 
     @property
@@ -55,7 +54,7 @@ class Interactable:
     def draw(self, screen, cam, t, theme):
         r = self.rect.move(-cam[0], -cam[1])
         if self.kind == "exit":
-            return  # rift drawn separately
+            return
         world.draw_prop(screen, self.prop, r, t, theme)
 
 
@@ -69,7 +68,7 @@ class WanderNPC:
         self.lines = d.get("lines", [])
         self.risky = d.get("risky", False)
         self.gives = d.get("gives")
-        self.take = None        # people aren't takeable
+        self.take = None
         self.used = False
         self.sprite_idx = d.get("sprite", 1)
         sz = 44
@@ -118,7 +117,6 @@ class WanderNPC:
         screen.blit(self.image, (sx, sy + bob))
 
 
-# ---------------------------------------------------------------------------
 class EraScene(Scene):
     SUSPICION_MAX = 100
 
@@ -129,8 +127,6 @@ class EraScene(Scene):
         self.accent = world.THEMES[self.theme]["accent"]
         sound.music("era_" + self.theme)
 
-        # Procedurally lay out this era, seeded by the current life so the
-        # world is new each playthrough but stable within one.
         base = self.game.flags["run_seed"] or 1
         seed = (base * 100003 + sum(ord(c) for c in key)) & 0x7fffffff
         layout = worldgen.build(self.data, seed)
@@ -151,7 +147,6 @@ class EraScene(Scene):
         self.objects = [Interactable(o) for o in layout["objects"]]
         self.npcs = [WanderNPC(n) for n in layout["npcs"]]
 
-        # the puzzle: a cryptic directive, clues to read, and a code lock
         self.puzzle = self.data["puzzle"]
         self.lock_id = self.puzzle["lock"]
         self.solved = self.game.flags.done(key)
@@ -160,30 +155,28 @@ class EraScene(Scene):
         self.narrator = Narrator()
         self.narrator.say(self.data["arrival"])
 
-        # Carrying contraband (instability) means the year is already on edge.
         instab = self.game.flags["instability"]
         self.suspicion = min(40.0, instab * 8.0)
         self.warned = False
         self.keepers = []
         self.caught = False
         self.grace = max(3.0, 10.0 - instab)
-        self.flash = 0.0        # red tear flash when you take something
+        self.flash = 0.0
         self.t = 0.0
         self.cur_zone = None
         self.zone_title = ""
         self.zone_t = 0.0
 
-        self.modal = None           # active code lock
+        self.modal = None
         self.rift = next((o for o in self.objects if o.kind == "exit"), None)
 
-        self.new_achievements = []  # achievements just unlocked (toast)
+        self.new_achievements = []
         self.achv_t = 99.0
 
     @property
     def capturing_text(self):
         return self.modal is not None
 
-    # -- helpers ---------------------------------------------------------
     @property
     def quest_done(self):
         return self.solved
@@ -197,14 +190,11 @@ class EraScene(Scene):
 
     @staticmethod
     def _collide(rect):
-        # Prop footprints have transparent padding (a thin candle in a wide
-        # box, etc.). Shrink the collider ~20% to hug the visible art — still
-        # big enough that you can't walk through the object.
         return rect.inflate(-min(rect.w - 8, rect.w // 5),
                             -min(rect.h - 8, rect.h // 5))
 
     def _solids(self):
-        s = list(self.walls)   # walls stay full — they're barriers
+        s = list(self.walls)
         s += [self._collide(d["rect"]) for d in self.decor if d.get("solid", True)]
         s += [self._collide(o.rect) for o in self.objects
               if o.kind != "exit" and o.solid]
@@ -255,7 +245,7 @@ class EraScene(Scene):
             f"You take {item}. It shouldn't leave this year.",
             "A rift tears behind you. The Keepers feel everything you carry.",
         ])
-        self._raise_suspicion(60)          # likely wakes the Keepers right now
+        self._raise_suspicion(60)
 
     def _camera(self):
         cx = self.player.pos.x + PSIZE // 2 - config.WIDTH // 2
@@ -278,7 +268,7 @@ class EraScene(Scene):
         sound.sfx("keeper")
         self.narrator.say(content.NARR_KEEPER_SPAWN)
         instab = self.game.flags["instability"]
-        count = 2 + min(instab, 4)          # more contraband -> more Keepers
+        count = 2 + min(instab, 4)
         speed = 2.5 + 0.25 * min(instab, 4)
         for _ in range(count):
             edge = random.choice(["top", "bottom", "left", "right"])
@@ -292,7 +282,6 @@ class EraScene(Scene):
                 p = (self.world.width + 40, random.randint(0, self.world.height))
             self.keepers.append(TimeKeeper(*p, speed=speed))
 
-    # -- interaction -----------------------------------------------------
     def _interact(self, obj):
         if obj.kind == "exit":
             self._use_rift()
@@ -305,7 +294,6 @@ class EraScene(Scene):
                                        directive=self.puzzle["directive"],
                                        on_wrong=self._wrong_code)
             return
-        # a clue — read it
         if obj.used:
             return
         sound.sfx("interact")
@@ -330,7 +318,6 @@ class EraScene(Scene):
         self.narrator.say(content.NARR_WORK_DONE)
 
     def _wrong_code(self):
-        # wrong guesses are not free — the year notices
         sound.sfx("keeper")
         self.flash = 0.6
         self._raise_suspicion(34)
@@ -343,10 +330,9 @@ class EraScene(Scene):
 
     def _use_rift(self):
         sound.sfx("rift")
-        if self.keepers:        # you reached the rift with the Keepers on you
+        if self.keepers:
             self.game.flags["escaped_keepers"] = True
             self.game.flags.save()
-            # toast lands in the hub, since we leave immediately
             self.game.pending_toasts.extend(self.game.flags.sync_achievements())
         if not self.quest_done:
             self.game.flags["defiance"] = self.game.flags["defiance"] + 1
@@ -357,7 +343,6 @@ class EraScene(Scene):
         self.caught = True
         self.game.go("trapped", year=self.data["year"])
 
-    # -- loop ------------------------------------------------------------
     def handle_event(self, event):
         if self.modal:
             self.modal.handle_event(event)
@@ -405,7 +390,6 @@ class EraScene(Scene):
         self.player.update(keys, self._solids(), self.world)
         sound.footsteps(self.player.moved_this_frame)
 
-        # zone / "travel to a place" detection
         pc = self.player.center()
         here = None
         for z in self.zones:
@@ -430,16 +414,13 @@ class EraScene(Scene):
                 self._get_caught()
                 return
 
-    # -- draw ------------------------------------------------------------
     def draw(self, screen):
         cam = self._camera()
         screen.blit(self.floor, (-cam[0], -cam[1]))
 
-        # walls first (flat barriers)
         for w in self.walls:
             world.draw_prop(screen, "wall", w.move(-cam[0], -cam[1]), self.t, self.theme)
 
-        # y-sorted scenery + actors
         near = None if self.dialogue.active else self._near()
         drawables = []
         for d in self.decor:
@@ -471,12 +452,11 @@ class EraScene(Scene):
         for k in self.keepers:
             k.draw(screen, cam[0], cam[1])
 
-        # atmosphere
         self.particles.draw(screen)
         world.draw_grade(screen, self.theme)
         world.draw_vignette(screen)
 
-        if self.flash > 0:      # a rift tears when you steal from the year
+        if self.flash > 0:
             overlay = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
             overlay.fill((*config.BLOOD, int(120 * self.flash)))
             screen.blit(overlay, (0, 0))
@@ -540,10 +520,8 @@ class EraScene(Scene):
         screen.blit(lbl, (r.centerx - lbl.get_width() // 2, r.bottom + 6))
 
     def _draw_hud(self, screen, near):
-        # year, top-left (subtitle lives in the location card below)
         ui.text(screen, config.font(26), self.data["year"], self.accent, 24, 12)
 
-        # location reveal, screen-centre, on zone change
         if self.zone_title and self.zone_t < 3.4:
             a = 255 if self.zone_t < 2.2 else int(255 * (3.4 - self.zone_t) / 1.2)
             cy = config.HEIGHT // 2 - 80
@@ -555,7 +533,6 @@ class EraScene(Scene):
         if self.dialogue.active:
             return
 
-        # directive panel, bottom-left (a cryptic goal — figure out the rest)
         f = config.font(17)
         text = "Solved — find a rift to leave" if self.solved else self.puzzle["directive"]
         col = config.TITOR if self.solved else config.WHITE
@@ -568,7 +545,6 @@ class EraScene(Scene):
         for i, line in enumerate(lines):
             ui.text(screen, f, line, col, panel.x + 16, panel.y + 30 + i * 24)
 
-        # stolen satchel chips
         satchel = self.game.flags["satchel"]
         if satchel:
             ui.text(screen, config.font(13), "SATCHEL:", config.WARN,
@@ -578,11 +554,9 @@ class EraScene(Scene):
                 cx += ui.chip(screen, config.font(14), item, config.BLOOD,
                               cx, panel.bottom + 4) + 8
 
-        # controls hint
         ui.text(screen, config.font(14), "WASD move · E interact · T take", config.DIM,
                 config.WIDTH - 24, config.HEIGHT - 28, right=True, shadow=False)
 
-        # attention meter
         if self.suspicion > 1 and not self.quest_done:
             bw, bh = 220, 14
             bx, by = config.WIDTH - bw - 24, 30

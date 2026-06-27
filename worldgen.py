@@ -15,7 +15,6 @@ DOOR = 140
 NPC_SIZE = 44
 PLAYER_SIZE = 48
 
-# Default footprint per prop kind.
 PROP_SIZE = {
     "crt": (80, 84), "computer": (90, 70), "poster": (70, 84), "payphone": (60, 90),
     "desk": (110, 60), "candle": (44, 70), "core": (80, 100), "console": (90, 80),
@@ -86,23 +85,20 @@ def build(spec, seed):
 
     rooms = [(c, r, room_rect(c, r)) for r in range(rows) for c in range(cols)]
 
-    # --- walls with doors ------------------------------------------------
     x0, x1 = M, world_w - M
     y0, y1 = M, world_h - M
     walls = []
 
-    # vertical wall lines (i = 0..cols)
     for i in range(cols + 1):
         x = M + i * (rw + WALL)
         gaps = []
-        if 0 < i < cols:  # interior line -> a door per row
+        if 0 < i < cols:
             for r in range(rows):
                 ry = M + WALL + r * (rh + WALL)
                 gy = ry + rng.randint(60, max(60, rh - DOOR - 60))
                 gaps.append((gy, DOOR))
         walls += _vwall(x, y0, y1, gaps)
 
-    # horizontal wall lines (j = 0..rows)
     for j in range(rows + 1):
         y = M + j * (rh + WALL)
         gaps = []
@@ -113,7 +109,6 @@ def build(spec, seed):
                 gaps.append((gx, DOOR))
         walls += _hwall(y, x0, x1, gaps)
 
-    # --- choose spawn + rift rooms --------------------------------------
     bottom = [t for t in rooms if t[1] == rows - 1]
     top = [t for t in rooms if t[1] == 0]
     spawn_room = rng.choice(bottom)
@@ -121,22 +116,17 @@ def build(spec, seed):
 
     placed = {id(t[2]): [] for t in rooms}
 
-    # Reserve a clear, player-sized area and spawn at its centre (not offset
-    # below it — that used to drop the player straight into a prop).
     spawn_rect = _place(spawn_room[2], PLAYER_SIZE + 20, PLAYER_SIZE + 20,
                         placed[id(spawn_room[2])], rng, inset=100, spacing=72)
     spawn = (spawn_rect.centerx - PLAYER_SIZE // 2,
              spawn_rect.centery - PLAYER_SIZE // 2)
 
-    # --- assign clues + the lock to rooms -------------------------------
     objs = list(spec.get("objects", []))
     npcs = list(spec.get("npcs", []))
     by_id = {o["id"]: ("obj", o) for o in objs}
     by_id.update({n["id"]: ("npc", n) for n in npcs})
     lock_id = spec.get("puzzle", {}).get("lock")
 
-    # spread everything across rooms (round-robin), preferring non-spawn rooms
-    # first so clues force exploration; the lock is pushed away from spawn.
     other_rooms = [t for t in rooms if t != spawn_room]
     rng.shuffle(other_rooms)
     order = [t[2] for t in (other_rooms + [spawn_room])]
@@ -160,14 +150,12 @@ def build(spec, seed):
                                  radius=min(data.get("radius", 80),
                                             min(room.w, room.h) // 2 - 60)))
 
-    # the rift (always present, in the rift room)
     rw_, rh_ = _size("rug")
     rr = _place(rift_room[2], rw_, rh_, placed[id(rift_room[2])], rng)
     out_objs.append({"id": "rift", "label": "RIFT", "kind": "exit", "prop": "rug",
                      "lines": [], "solid": False,
                      "x": rr.x, "y": rr.y, "w": rw_, "h": rh_})
 
-    # --- scatter decor ---------------------------------------------------
     decor = []
     kinds = spec.get("decor_kinds", ["crate"])
     for (_, _, room) in rooms:
@@ -178,7 +166,6 @@ def build(spec, seed):
             decor.append({"kind": kind, "x": r.x, "y": r.y, "w": w, "h": h,
                           "solid": kind not in NON_SOLID})
 
-    # --- spawn safety net: never start the player inside a solid ---------
     solids = [pygame.Rect(*w) for w in walls]
     solids += [pygame.Rect(d["x"], d["y"], d["w"], d["h"])
                for d in decor if d.get("solid", True)]
@@ -198,7 +185,6 @@ def build(spec, seed):
                 spawn = (x, y)
                 break
 
-    # --- zones (named rooms) --------------------------------------------
     names = list(spec.get("zone_names", []))
     rng.shuffle(names)
     zones = []

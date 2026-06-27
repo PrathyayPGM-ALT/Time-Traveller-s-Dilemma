@@ -13,7 +13,7 @@ class Line:
     def __init__(self, text, speaker=None, portrait=None, color=None):
         self.text = text
         self.speaker = speaker
-        self.portrait = portrait          # a Surface, or None
+        self.portrait = portrait
         self.color = color or config.WHITE
 
 
@@ -36,7 +36,6 @@ class DialogueBox:
         return self.current is not None or bool(self.queue)
 
     def feed(self, lines, on_done=None):
-        # Accept a single string, a Line, or a list of either.
         if isinstance(lines, (str, Line)):
             lines = [lines]
         for ln in lines:

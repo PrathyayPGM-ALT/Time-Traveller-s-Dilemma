@@ -14,7 +14,7 @@ SAVE_PATH = "save.json"
 
 
 class Scene:
-    capturing_text = False      # True when a scene wants raw keystrokes (e.g. a terminal)
+    capturing_text = False
 
     def __init__(self, game):
         self.game = game
@@ -44,33 +44,33 @@ class Flags:
     """
 
     SOUL = {
-        "lives": 0,             # incarnations begun
-        "echoes": [],           # short memories of past lives
-        "total_quests": 0,      # eras completed across all lives
-        "total_caught": 0,      # times the Keepers took a life
-        "ever_eras": [],        # eras ever completed in any life
-        "ending_seen": False,   # has the loop ever closed
-        "trained": False,       # has the boss run orientation (ever)
-        "achievements": [],     # unlocked achievement ids (permanent)
-        "escaped_keepers": False,  # ever fled a timeline with Keepers on you
+        "lives": 0,
+        "echoes": [],
+        "total_quests": 0,
+        "total_caught": 0,
+        "ever_eras": [],
+        "ending_seen": False,
+        "trained": False,
+        "achievements": [],
+        "escaped_keepers": False,
     }
     RUN = {
         "intro_seen": False,
-        "eras_done": [],        # eras completed this life
-        "visits": 0,            # Troi crossings this life
+        "eras_done": [],
+        "visits": 0,
         "titor_truth": False,
         "defiance": 0,
-        "run_seed": 0,          # seeds procedural worlds for this life
-        "run_ended": False,     # life is over (trapped or loop closed)
-        "satchel": [],          # items carried between timelines (contraband)
-        "instability": 0,       # how much you've torn — angers the Keepers
+        "run_seed": 0,
+        "run_ended": False,
+        "satchel": [],
+        "instability": 0,
     }
     MAX_ECHOES = 24
 
     def __init__(self):
         self.data = {**self.SOUL, **self.RUN}
         self.load()
-        self.sync_achievements()    # retroactively unlock from existing progress
+        self.sync_achievements()
 
     def __getitem__(self, k):
         return self.data.get(k)
@@ -84,7 +84,7 @@ class Flags:
     def complete(self, era):
         if era not in self.data["eras_done"]:
             self.data["eras_done"].append(era)
-        if era not in self.data["ever_eras"]:   # the soul remembers immediately
+        if era not in self.data["ever_eras"]:
             self.data["ever_eras"].append(era)
 
     def sync_achievements(self):
@@ -102,7 +102,6 @@ class Flags:
             self.save()
         return new
 
-    # -- life cycle ------------------------------------------------------
     def has_run(self):
         d = self.data
         return not d["run_ended"] and (d["intro_seen"] or d["visits"] > 0
@@ -182,9 +181,6 @@ class Game:
     FADE_SPEED = 14
 
     def __init__(self):
-        # Create the display FIRST. On web (pygbag/WASM) audio init can stall,
-        # and if that happened before set_mode the canvas never sized and the
-        # page hung on grey. Display-first guarantees the window comes up.
         pygame.init()
         print("BOOT: pygame.init done")
         pygame.display.set_caption(config.TITLE)
@@ -194,19 +190,18 @@ class Game:
         print("BOOT: display up")
 
         sound.init()
-        sound.ambience()          # persistent creepy bed under every scene
+        sound.ambience()
         print("BOOT: audio init done")
 
         self.flags = Flags()
         self._registry = {}
         self.scene = None
-        self.pending_toasts = []     # achievements unlocked mid-transition
+        self.pending_toasts = []
         print("BOOT: flags ready")
 
-        # transition state
         self._next = None
         self._fade = 0
-        self._fade_dir = 0          # +1 = fading out, -1 = fading in
+        self._fade_dir = 0
 
     def register(self, name, factory):
         self._registry[name] = factory
@@ -265,7 +260,7 @@ class Game:
                     self.running = False
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_m \
                         and not getattr(self.scene, "capturing_text", False):
-                    sound.toggle()           # mute / unmute audio
+                    sound.toggle()
                 elif not self.transitioning:
                     self.scene.handle_event(event)
 
@@ -274,7 +269,7 @@ class Game:
             self._tick_transition()
             self._draw_transition()
             pygame.display.flip()
-            await asyncio.sleep(0)            # hand control back to the browser
+            await asyncio.sleep(0)
 
         self.flags.save()
         pygame.quit()

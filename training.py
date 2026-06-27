@@ -100,7 +100,6 @@ class TrainingScene(Scene):
     def _near(self, rect):
         return self.player.rect().colliderect(rect.inflate(70, 70))
 
-    # -- input -----------------------------------------------------------
     def handle_event(self, event):
         if self.modal:
             self.modal.handle_event(event)
@@ -119,7 +118,6 @@ class TrainingScene(Scene):
             elif self.phase == "terminal" and self._near(self.term):
                 self.modal = TerminalModal(PRACTICE)
 
-    # -- loop ------------------------------------------------------------
     def update(self, dt):
         self.t += dt / 1000.0
         self.particles.update(dt)
@@ -155,7 +153,6 @@ class TrainingScene(Scene):
             self.game.flags.save()
             self.game.go("hub")
 
-    # -- draw ------------------------------------------------------------
     def draw(self, screen):
         screen.fill((10, 10, 14))
         self.particles.draw(screen)
@@ -164,7 +161,6 @@ class TrainingScene(Scene):
         ui.text(screen, config.font(15), "the boss is running this. reluctantly.",
                 config.DIM, 24, 46, shadow=False)
 
-        # the practice props
         active = self.phase
         self._marker(screen, self.pad, "MARKER", active == "move", glow=True)
         world.draw_prop(screen, "console", self.console, self.t, "ruin")
@@ -175,7 +171,6 @@ class TrainingScene(Scene):
 
         self.player.draw(screen)
 
-        # current task prompt — panel sized to the text so it never overflows
         task = TASKS.get(self.phase)
         if task and not self.dialogue.active:
             f = config.font(17)

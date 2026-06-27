@@ -55,5 +55,4 @@ class Typewriter:
         return self.count >= len(self.text)
 
     def finish(self):
-        # Jump straight to fully-revealed.
         self.t = len(self.text) / self.cps + 1.0

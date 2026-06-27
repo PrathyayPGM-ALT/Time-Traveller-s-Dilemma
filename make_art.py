@@ -14,9 +14,9 @@ import shutil
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
-import pygame  # noqa: E402
+import pygame
 
-import worldgen  # noqa: E402  (for PROP_SIZE footprints)
+import worldgen
 
 pygame.init()
 pygame.display.set_mode((1, 1))
@@ -41,12 +41,8 @@ def scaled(s, size):
     return pygame.transform.scale(s, size)
 
 
-# Shared outline darks
 OL = (32, 26, 24)
 
-# ---------------------------------------------------------------------------
-# PROP GRIDS  (kind -> (rows, palette))
-# ---------------------------------------------------------------------------
 PROPS = {}
 
 PROPS["crate"] = ([
@@ -467,9 +463,6 @@ PROPS["cot"] = ([
     ".D..................D.",
 ], {"D": OL, "P": (188, 188, 200), "F": (92, 72, 110), "W": (72, 54, 44), "G": (60, 44, 32)})
 
-# ---------------------------------------------------------------------------
-# CHARACTERS
-# ---------------------------------------------------------------------------
 def _lighten(c, d=26):
     return tuple(min(255, v + d) for v in c)
 
@@ -479,8 +472,6 @@ def _darken(c, d=22):
 
 
 def player_pal(coat):
-    # ashen, hollow-eyed, worn — a body worn by a loop it doesn't remember.
-    # L/R/r = coat lit / base / shadow (light from top-left).
     return {"D": (16, 14, 18), "H": (52, 48, 58), "h": (32, 30, 40),
             "S": (192, 180, 172), "s": (150, 136, 132), "E": (18, 16, 22),
             "e": (154, 168, 176), "m": (74, 46, 48),
@@ -488,7 +479,7 @@ def player_pal(coat):
             "P": (64, 66, 82), "p": (46, 48, 60), "K": (44, 42, 52)}
 
 
-PL = (116, 56, 54)      # muted, drained maroon
+PL = (116, 56, 54)
 
 PLAYER_DOWN_1 = ([
     "................",
@@ -606,7 +597,6 @@ PLAYER_SIDE_2 = ([
 
 
 def npc_grid(coat, hair):
-    # gaunt, ashen, wide DEAD eyes, no mouth, long spectral coat
     return ([
         "................",
         "....DHHHHD......",
@@ -630,13 +620,11 @@ def npc_grid(coat, hair):
 
 
 NPCS = {
-    "npc1": npc_grid((66, 78, 104), (40, 38, 44)),   # dull slate — familiar
-    "npc2": npc_grid((92, 88, 72), (34, 32, 30)),    # drab olive — watcher
-    "npc3": npc_grid((70, 96, 92), (46, 42, 40)),    # faded teal — the double
+    "npc1": npc_grid((66, 78, 104), (40, 38, 44)),
+    "npc2": npc_grid((92, 88, 72), (34, 32, 30)),
+    "npc3": npc_grid((70, 96, 92), (46, 42, 40)),
 }
 
-# Tall, narrow, hooded — authored at a 1:2 aspect so the hub (220x440) and
-# portraits don't squash it.
 BOSS = ([
     "................",
     "......DDDD......",
@@ -673,19 +661,16 @@ BOSS = ([
 ], {"D": (8, 6, 10), "K": (22, 20, 28), "r": (175, 32, 32)})
 
 
-# ---------------------------------------------------------------------------
 def main():
     os.makedirs(PROPS_DIR, exist_ok=True)
     os.makedirs(BACKUP, exist_ok=True)
 
-    # props
     for kind, (rows, pal) in PROPS.items():
         fp = worldgen.PROP_SIZE.get(kind, (70, 70))
         pygame.image.save(scaled(grid(rows, pal), fp),
                           os.path.join(PROPS_DIR, kind + ".png"))
     print(f"props: {len(PROPS)} -> {PROPS_DIR}\\")
 
-    # characters (back up originals once, then overwrite)
     def save_char(name, surf):
         dst = os.path.join(TEX, name + ".png")
         bak = os.path.join(BACKUP, name + ".png")
@@ -693,7 +678,7 @@ def main():
             shutil.copy2(dst, bak)
         pygame.image.save(surf, dst)
 
-    psize = (48, 48)        # slightly bigger player
+    psize = (48, 48)
     s1 = scaled(grid(*PLAYER_SIDE_1), psize)
     s2 = scaled(grid(*PLAYER_SIDE_2), psize)
     save_char("player_down_1", scaled(grid(*PLAYER_DOWN_1), psize))

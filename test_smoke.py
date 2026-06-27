@@ -7,19 +7,18 @@ import os
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
 
-import pygame  # noqa: E402
+import pygame
 
-import scene  # noqa: E402
-from flow import (TitleScene, IntroScene, TrappedScene, EndingScene,  # noqa: E402
+import scene
+from flow import (TitleScene, IntroScene, TrappedScene, EndingScene,
                   AchievementsScene)
-from hub import HubScene  # noqa: E402
-from troi import TroiScene  # noqa: E402
-from era import EraScene  # noqa: E402
-from training import TrainingScene  # noqa: E402
-from terminal import TerminalModal  # noqa: E402
-import content  # noqa: E402
+from hub import HubScene
+from troi import TroiScene
+from era import EraScene
+from training import TrainingScene
+from terminal import TerminalModal
+import content
 
-# Use a throwaway save so we start fresh and don't clobber a real one.
 scene.SAVE_PATH = "save.test.json"
 if os.path.exists("save.test.json"):
     os.remove("save.test.json")
@@ -54,7 +53,6 @@ def step(n=1, dt=50):
 
 
 def settle():
-    # run the fade transition to completion
     for _ in range(60):
         step()
         if not game.transitioning:
@@ -78,35 +76,31 @@ def expect(cond, msg):
     print(("OK  " if cond else "FAIL") + "  " + msg)
 
 
-# --- title -----------------------------------------------------------------
 game._swap("title", {})
 step(5)
 expect(isinstance(game.scene, TitleScene), "title scene loads")
-key(pygame.K_RETURN)            # New journey (fresh save)
+key(pygame.K_RETURN)
 settle()
 expect(isinstance(game.scene, IntroScene), "title -> intro")
-game.flags["trained"] = True     # so the hub intro unlocks rather than training
+game.flags["trained"] = True
 
-# --- intro cutscene: silent boss reveal, auto-plays then -> hub -------------
 for _ in range(6000):
     step()
     if isinstance(game.scene, HubScene):
         break
 expect(isinstance(game.scene, HubScene), "intro -> hub")
 
-# --- hub: boss intro, then travel to 2001 ----------------------------------
 drain_dialogue()
 expect(not game.scene.menu_locked, "hub menu unlocks after boss intro")
 expect(game.flags["intro_seen"], "intro_seen set after boss intro")
 game.scene.selected = next(i for i, (eid, _) in enumerate(game.scene.entries)
                            if eid == "2001")
-key(pygame.K_RETURN)            # travel -> plays brief, then go troi
+key(pygame.K_RETURN)
 drain_dialogue()
 settle()
 expect(isinstance(game.scene, TroiScene), "hub -> troi (to 2001)")
 expect(game.flags["visits"] == 1, "first Troi visit counted")
 
-# --- troi: shove player into the rift --------------------------------------
 troi = game.scene
 troi.player.place(troi.rift.centerx - 18, troi.rift.centery - 18)
 step(3)
@@ -114,7 +108,6 @@ settle()
 expect(isinstance(game.scene, EraScene) and game.scene.key == "2001",
        "troi -> era 2001")
 
-# --- era 2001: solve the puzzle (read a clue, wrong code, right code) -------
 era = game.scene
 
 
@@ -126,13 +119,11 @@ expect(era.rift is not None, "procedural layout has a rift")
 expect(len(era.walls) > 0 and len(era.zones) >= 4, "procedural rooms generated")
 expect(era.lock_id == "terminal", "2001's lock is the terminal")
 
-# a clue can be read
 notice = find(era, "notice")
 era._interact(notice)
 drain_dialogue()
 expect(notice.used, "a clue can be read")
 
-# the lock opens a code puzzle; a wrong answer costs you attention
 lock = find(era, era.lock_id)
 era._interact(lock)
 expect(era.modal is not None, "the lock opens a code-entry puzzle")
@@ -141,7 +132,6 @@ term_type(era.modal, "0000")
 term_key(era.modal, pygame.K_RETURN)
 expect(era.suspicion > before, "a wrong code raises attention")
 
-# the right answer (deduced from the clues) solves it
 term_type(era.modal, "2036")
 term_key(era.modal, pygame.K_RETURN)
 for _ in range(80):
@@ -153,7 +143,6 @@ expect(game.flags.done("2001"), "2001 marked complete in flags")
 expect("titor" in game.flags["achievements"], "beating 2001 unlocks an achievement")
 expect(era.new_achievements, "the era queues an unlock toast")
 
-# divergent (lore) interaction raises suspicion + keeper spawn (fresh era)
 era2 = EraScene(game)
 era2.on_enter(key="3744")
 game.scene = era2
@@ -162,7 +151,6 @@ era2._interact(lore)
 drain_dialogue()
 expect(era2.suspicion > 0, "risky interaction raises suspicion")
 
-# take an item from the timeline -> satchel + instability
 take_obj = next((o for o in era2.objects if getattr(o, "take", None)), None)
 expect(take_obj is not None, "era has a takeable item")
 bi = game.flags["instability"]
@@ -173,7 +161,6 @@ expect(game.flags["instability"] == bi + 1, "taking raises instability")
 era2._raise_suspicion(100)
 expect(len(era2.keepers) >= 3, "contraband -> peak spawns extra Keepers")
 
-# keeper catches player -> trapped (permanent)
 era2.keepers[0].pos.update(era2.player.pos)
 step(2)
 settle()
@@ -192,7 +179,6 @@ if trapped.beings:
     step(2)
     expect(trapped.dialogue.active, "can converse with a being in the trap")
 
-# --- meta: a new life carries the soul but resets the run ------------------
 lives_before = game.flags["lives"]
 game.flags.new_life()
 expect(game.flags["lives"] == lives_before + 1, "new life increments incarnations")
@@ -202,7 +188,6 @@ expect(game.flags["satchel"] == [] and game.flags["instability"] == 0,
 expect(not game.flags["run_ended"], "new life clears run_ended")
 expect(game.flags["run_seed"] != 0, "new life seeds a fresh world")
 
-# --- ending: finish all eras this life, enter hub --------------------------
 game.flags["intro_seen"] = True
 for k in content.ERA_ORDER:
     game.flags.complete(k)
@@ -218,35 +203,31 @@ key(pygame.K_RETURN)
 settle()
 expect(isinstance(game.scene, TitleScene), "ending -> title")
 
-# --- achievements: finishing everything unlocks them all -------------------
-new = game.flags.sync_achievements()  # picks up any not yet toasted
+new = game.flags.sync_achievements()
 unlocked = game.flags["achievements"]
 for aid in ("titor", "ibm", "forbidden", "theboss", "theend"):
     expect(aid in unlocked, "achievement '%s' unlocked after finishing all eras" % aid)
 
-# the achievements screen renders and Esc returns to the title
 game._swap("achievements", {})
 step(3)
 expect(isinstance(game.scene, AchievementsScene), "achievements scene loads")
 key(pygame.K_ESCAPE)
 settle()
 expect(isinstance(game.scene, TitleScene), "achievements -> title on Esc")
-# unlocked achievements persist through a save/load round-trip
 expect(set(unlocked) == set(scene.Flags().data["achievements"]),
        "achievements persist in the saved soul")
 
-# --- Total Panic: flee a timeline with the Keepers on you ------------------
-game.flags.new_life()            # fresh run so 2001 is unsolved (Keepers can wake)
+game.flags.new_life()
 game.flags["escaped_keepers"] = False
 if "panic" in game.flags["achievements"]:
     game.flags["achievements"].remove("panic")
 pe = EraScene(game)
 pe.on_enter(key="2001")
 game.scene = pe
-pe._raise_suspicion(100)         # spawn the Keepers
+pe._raise_suspicion(100)
 expect(len(pe.keepers) > 0, "high suspicion spawns Keepers")
 game.pending_toasts.clear()
-pe._use_rift()                   # bolt for the rift while they hunt you
+pe._use_rift()
 expect(game.flags["escaped_keepers"], "fleeing with Keepers sets the escape flag")
 expect("panic" in game.flags["achievements"], "escaping the Keepers unlocks Total Panic")
 expect(any(a["id"] == "panic" for a in game.pending_toasts),
@@ -254,13 +235,11 @@ expect(any(a["id"] == "panic" for a in game.pending_toasts),
 settle()
 expect(isinstance(game.scene, TroiScene), "escape -> troi")
 
-# --- the Troi-escape is, and stays, impossible -----------------------------
 expect("escape_troi" not in game.flags["achievements"], "the Troi-escape is unobtainable")
 game.flags.sync_achievements()
 expect("escape_troi" not in game.flags["achievements"],
        "the Troi-escape stays unobtainable even after a sync")
 
-# --- terminal minigame (standalone) ----------------------------------------
 tm = TerminalModal({"host": "x@troi", "win_cmds": ["post a.txt"],
                     "files": {"a.txt": ["hi"]}, "win": ["ok"]})
 term_type(tm, "help")
@@ -271,7 +250,6 @@ for _ in range(60):
     tm.update(50)
 expect(tm.done == "success", "terminal win command completes the task")
 
-# --- training scene runs without crashing ----------------------------------
 tr = TrainingScene(game)
 game.scene = tr
 tr.on_enter()
@@ -281,7 +259,6 @@ for _ in range(6):
     key(pygame.K_RETURN)
 expect(isinstance(game.scene, TrainingScene), "training scene runs")
 
-# --- boss return lines: no premature Troi, and they vary -------------------
 game.flags["visits"] = 0
 first = " ".join(d["text"] for d in content.boss_return(game.flags))
 expect("Troi" not in first, "post-tutorial return never mentions the Troi")
@@ -289,7 +266,6 @@ game.flags["visits"] = 4
 backs = {" ".join(d["text"] for d in content.boss_return(game.flags)) for _ in range(40)}
 expect(len(backs) > 1, "returned-from-mission boss line varies")
 
-# --- take mechanic: stealing fills the satchel and angers the Keepers ------
 game.flags.new_life()
 game.flags["run_seed"] = 777
 te = EraScene(game)
@@ -306,8 +282,7 @@ te2 = EraScene(game)
 te2.on_enter(key="2001")
 expect(te2.suspicion > 0, "carrying contraband starts the next era already watched")
 
-# --- audio (no files shipped — must no-op gracefully) ----------------------
-import sound  # noqa: E402
+import sound
 sound.music("hub")
 sound.sfx("rift")
 sound.footsteps(True)
@@ -316,7 +291,6 @@ muted = sound.toggle()
 sound.toggle()
 expect(muted is False, "audio system runs without files (graceful no-op)")
 
-# --- summary ---------------------------------------------------------------
 if os.path.exists("save.test.json"):
     os.remove("save.test.json")
 failed = [m for ok, m in checks if not ok]

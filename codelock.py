@@ -87,7 +87,6 @@ class CodeLockModal:
         ui.text(screen, config.font(20), self.prompt, config.WHITE,
                 rect.centerx, y + 6, center=True)
 
-        # input field
         box = pygame.Rect(rect.x + 60, rect.y + 140, rect.w - 120, 48)
         pygame.draw.rect(screen, (6, 8, 10), box, border_radius=6)
         pygame.draw.rect(screen, (*ACCENT, 180), box, 2, border_radius=6)

@@ -64,7 +64,6 @@ class Whisper:
         return self.age < self.life
 
     def draw(self, screen):
-        # fade in then out over its life
         f = min(self.age / 1.2, (self.life - self.age) / 1.2, 1.0)
         a = max(0, int(150 * f))
         s = self.surf.copy()
@@ -84,7 +83,6 @@ class TroiScene(Scene):
         self.player = Player(w // 2 - 18, h - 160, speed=3)
         self.player.reset_fade_in()
 
-        # more figures the more you have crossed — across this life and all lives
         n = content.troi_floaters(self.game.flags)
         self.floaters = [Floater(i, w, h) for i in range(n)]
         self.whisper_pool = content.troi_whispers(self.game.flags)
@@ -129,7 +127,6 @@ class TroiScene(Scene):
 
     def draw(self, screen):
         screen.fill((6, 7, 12))
-        # faint drifting starfield-ish dust
         for i in range(40):
             x = int((i * 137 + self.t * 12) % config.WIDTH)
             y = int((i * 89 + self.t * 5) % config.HEIGHT)
@@ -140,7 +137,6 @@ class TroiScene(Scene):
         for f in self.floaters:
             f.draw(screen)
 
-        # the rift
         pulse = 0.5 + 0.5 * math.sin(self.t * 2.5)
         for i in range(6):
             rr = self.rift.inflate(i * 18, i * 18)

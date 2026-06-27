@@ -18,9 +18,6 @@ def _clamp(c, j=0):
     return tuple(max(0, min(255, v + j)) for v in c)
 
 
-# ---------------------------------------------------------------------------
-# Themes: a palette + atmosphere per timeline.
-# ---------------------------------------------------------------------------
 THEMES = {
     "cafe": {
         "seed": 2001,
@@ -60,9 +57,6 @@ THEMES = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Baked floor
-# ---------------------------------------------------------------------------
 _floor_cache = {}
 
 
@@ -81,11 +75,9 @@ def bake_floor(theme_key, w, h):
             col = _clamp(base, rng.randint(-7, 7))
             pygame.draw.rect(surf, col, (tx, ty, tile, tile))
             pygame.draw.rect(surf, th["grout"], (tx, ty, tile, tile), 1)
-    # speckle / grime
     for _ in range((w * h) // 1100):
         x, y = rng.randint(0, w - 1), rng.randint(0, h - 1)
         surf.set_at((x, y), _clamp(th["floor_a"], rng.randint(-16, 16)))
-    # a few darker stains
     for _ in range((w * h) // 90000):
         x, y = rng.randint(40, w - 40), rng.randint(40, h - 40)
         r = rng.randint(20, 60)
@@ -96,9 +88,6 @@ def bake_floor(theme_key, w, h):
     return surf
 
 
-# ---------------------------------------------------------------------------
-# Light pools (additive)
-# ---------------------------------------------------------------------------
 _light_cache = {}
 
 
@@ -122,9 +111,6 @@ def draw_light(screen, center, radius, color, max_alpha=110):
                 special_flags=pygame.BLEND_RGBA_ADD)
 
 
-# ---------------------------------------------------------------------------
-# Vignette + colour grade
-# ---------------------------------------------------------------------------
 _vignette = None
 
 
@@ -147,9 +133,6 @@ def draw_grade(screen, theme_key):
     screen.blit(overlay, (0, 0))
 
 
-# ---------------------------------------------------------------------------
-# Ambient particles (screen-space, camera independent)
-# ---------------------------------------------------------------------------
 class Particles:
     PRESETS = {
         "dust":   dict(n=70, color=(180, 180, 170), vy=(2, 10), vx=(-6, 6), size=(1, 2), a=(20, 60)),
@@ -197,9 +180,6 @@ class Particles:
             screen.blit(surf, (part["x"], part["y"]))
 
 
-# ---------------------------------------------------------------------------
-# Props — each draws within rect r (already in screen space).
-# ---------------------------------------------------------------------------
 def _block(screen, r, side, top, dark, edge=None):
     pygame.draw.rect(screen, side, r, border_radius=3)
     pygame.draw.rect(screen, top, (r.x, r.y, r.w, max(3, r.h // 4)), border_radius=3)
@@ -210,9 +190,8 @@ def _block(screen, r, side, top, dark, edge=None):
 def p_wall(screen, r, t, th):
     base, top, dark = th["wall_side"], th["wall_top"], th["wall_dark"]
     pygame.draw.rect(screen, base, r)
-    pygame.draw.rect(screen, top, (r.x, r.y, r.w, 3))            # lit top edge
-    pygame.draw.rect(screen, dark, (r.x, r.bottom - 3, r.w, 3))  # shadowed base
-    # offset brick courses
+    pygame.draw.rect(screen, top, (r.x, r.y, r.w, 3))
+    pygame.draw.rect(screen, dark, (r.x, r.bottom - 3, r.w, 3))
     course = 13
     for i, y in enumerate(range(r.y + course, r.bottom - 2, course)):
         pygame.draw.line(screen, dark, (r.x, y), (r.right, y), 1)
@@ -245,7 +224,6 @@ def p_crt(screen, r, t, th):
     glow = th["accent"]
     pygame.draw.rect(screen, (8, 16, 12), scr)
     pygame.draw.rect(screen, glow, scr, 1)
-    # scanlines + cursor
     for i, y in enumerate(range(scr.y + 4, scr.bottom - 3, 6)):
         a = 70 if (i + int(t * 4)) % 4 else 130
         ln = pygame.Surface((scr.w - 6, 2), pygame.SRCALPHA)
@@ -438,8 +416,6 @@ PROPS = {
     "core": p_core, "console": p_console, "poster": p_poster, "rug": p_rug,
 }
 
-# Props that emit light: kind -> (color, radius, alpha). Kept subtle so many
-# of them don't wash the scene out.
 EMITTERS = {
     "crt": (config.TITOR, 64, 30), "computer": (config.RIFT, 60, 26),
     "candle": ((250, 180, 70), 58, 50), "fire": ((250, 170, 70), 150, 80),
@@ -448,9 +424,6 @@ EMITTERS = {
 }
 
 
-# Pixel-art drop-in: if a sprite exists for a prop kind, it replaces the
-# procedural drawing. Look first for a theme-specific variant, then a generic
-# one:  textures/props/<theme>_<kind>.png   or   textures/props/<kind>.png
 _prop_sprite_cache = {}
 
 

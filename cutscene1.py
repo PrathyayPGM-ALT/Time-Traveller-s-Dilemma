@@ -90,7 +90,7 @@ class Cutscene1:
                 self.alpha = min(255, self.alpha + self.fade_in_speed)
                 if self.alpha >= 255:
                     self.fading_in = False
-                    self.shake_timer = 22          # a lurch as he fully arrives
+                    self.shake_timer = 22
             elif not self.fading_out:
                 self.hold_timer += 1
                 if self.hold_timer >= self.hold_duration:
@@ -138,7 +138,6 @@ class Cutscene1:
                                     20 + sy + sway_y))
 
     def advance(self):
-        # Enter during the reveal just hurries him off-screen.
         if self.phase == 'boss' and not self.fading_in:
             self.fading_out = True
 

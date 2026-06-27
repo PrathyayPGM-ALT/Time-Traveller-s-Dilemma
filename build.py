@@ -16,7 +16,7 @@ import os
 import sys
 import PyInstaller.__main__
 
-SEP = os.pathsep   # ';' on Windows, ':' elsewhere
+SEP = os.pathsep
 MACOS = sys.platform == "darwin"
 
 opts = [
@@ -28,13 +28,10 @@ opts = [
     f"--add-data=textures{SEP}textures",
     f"--add-data=fonts{SEP}fonts",
     f"--add-data=sounds{SEP}sounds",
-    # the game never imports these — keep the build lean
     "--exclude-module", "numpy",
     "--exclude-module", "PIL",
 ]
 
-# Single-file binary on Windows/Linux. On macOS a one-dir build makes a cleaner,
-# more reliable .app bundle, so skip --onefile there.
 if not MACOS:
     opts.insert(3, "--onefile")
 

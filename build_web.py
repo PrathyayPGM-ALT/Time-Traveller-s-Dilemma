@@ -22,21 +22,17 @@ import sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
 STAGE = os.path.join(ROOT, "web_build")
 
-# Python modules that are dev/build tooling, not part of the runtime.
 SKIP_PY = {
     "build.py", "build_web.py", "make_art.py", "make_audio.py",
     "promo.py", "shot.py", "test_smoke.py",
 }
 
-# Asset folders to ship (subpaths to skip inside them).
 ASSET_DIRS = {
-    "textures": {"_original"},   # drop the pre-edit sprite backups
+    "textures": {"_original"},
     "fonts": set(),
     "sounds": set(),
 }
-SKIP_FILES = {"README.md"}       # docs that needn't ship inside asset folders
-# Browsers/pygbag don't support mp3 — we ship the .ogg conversions instead
-# (sound._find prefers .ogg anyway). mp3s are kept for the desktop build.
+SKIP_FILES = {"README.md"}
 SKIP_EXTS = (".mp3",)
 
 
@@ -70,9 +66,9 @@ def build(serve):
     cmd = [sys.executable, "-m", "pygbag",
            "--app_name", "TimeTravellersDilemma",
            "--title", "Time Traveller's Dilemma",
-           "--ume_block", "0"]          # no extra "click to start" gate
+           "--ume_block", "0"]
     if not serve:
-        cmd.append("--build")        # build only; don't start a server
+        cmd.append("--build")
     cmd.append(main_py)
     print("Running:", " ".join(cmd))
     subprocess.run(cmd, check=True)

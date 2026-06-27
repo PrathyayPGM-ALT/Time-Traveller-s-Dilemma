@@ -15,9 +15,6 @@ import sys
 
 import pygame
 
-# Running inside pygbag (browser/WASM)? Audio there needs a user gesture and the
-# mixer can stall the boot — so we skip audio entirely on web (the game runs
-# silent in-browser) and keep full audio on desktop.
 IS_WEB = sys.platform == "emscripten"
 
 SOUND_DIR = "sounds"
@@ -25,7 +22,7 @@ EXTS = (".ogg", ".mp3", ".wav")
 MUSIC_VOL = 0.7
 SFX_VOL = 0.7
 FOOT_VOL = 0.5
-AMB_VOL = 0.6           # the persistent creepy bed under everything
+AMB_VOL = 0.6
 
 ENABLED = True
 _ready = False
@@ -43,18 +40,16 @@ _amb_chan = None
 def init():
     global _ready, _foot_chan, _amb_chan
     if IS_WEB:
-        _ready = False        # web: no audio (avoids WASM mixer stalls on boot)
+        _ready = False
         return
     try:
         if not pygame.mixer.get_init():
             pygame.mixer.init()
         pygame.mixer.set_num_channels(16)
-        _foot_chan = pygame.mixer.Channel(15)   # reserved for footsteps
-        _amb_chan = pygame.mixer.Channel(14)    # reserved for ambience bed
+        _foot_chan = pygame.mixer.Channel(15)
+        _amb_chan = pygame.mixer.Channel(14)
         _ready = True
     except Exception:
-        # No audio device (or the browser is blocking it pre-gesture) — the
-        # whole module degrades to a silent no-op.
         _ready = False
 
 
@@ -70,7 +65,6 @@ def _vol():
     return MUSIC_VOL if ENABLED else 0.0
 
 
-# -- music -------------------------------------------------------------------
 def music(name, fade=900):
     global _cur
     if not _ready or name == _cur:
@@ -121,7 +115,6 @@ def stop_music(fade=600):
     _cur = None
 
 
-# -- one-shot sfx ------------------------------------------------------------
 def sfx(name):
     if not (_ready and ENABLED):
         return
@@ -140,7 +133,6 @@ def sfx(name):
         s.play()
 
 
-# -- footsteps (looped while moving) -----------------------------------------
 def footsteps(moving):
     global _foot, _foot_loaded, _foot_on
     if not (_ready and ENABLED):
@@ -171,7 +163,6 @@ def stop_footsteps():
         _foot_on = False
 
 
-# -- mute --------------------------------------------------------------------
 def toggle():
     global ENABLED
     ENABLED = not ENABLED

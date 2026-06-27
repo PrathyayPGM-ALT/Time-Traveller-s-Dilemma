@@ -28,9 +28,8 @@ class HubScene(Scene):
         self.dialogue = DialogueBox()
         self.narrator = Narrator()
         self.selected = 0
-        self.menu_locked = True   # unlocked once any opening dialogue closes
+        self.menu_locked = True
 
-        # an achievement unlocked while jumping (e.g. escaping the Keepers)
         self.new_achievements = self.game.pending_toasts[:]
         self.game.pending_toasts.clear()
         self.achv_t = 0.0 if self.new_achievements else 99.0
@@ -50,7 +49,6 @@ class HubScene(Scene):
             self.dialogue.feed([self._line(d) for d in content.boss_return(flags)],
                                on_done=self._unlock)
 
-    # -- helpers ---------------------------------------------------------
     def _line(self, d):
         name, path, color = content.SPEAKERS.get(
             d["who"], (d["who"], None, config.WHITE))
@@ -64,7 +62,7 @@ class HubScene(Scene):
         self.game.flags["intro_seen"] = True
         self.game.flags.save()
         if not self.game.flags["trained"]:
-            self.game.go("training")     # the boss insists on orientation
+            self.game.go("training")
         else:
             self.menu_locked = False
 
@@ -78,7 +76,6 @@ class HubScene(Scene):
                                on_done=lambda: self.game.go("troi", destination=entry_id))
             self.menu_locked = True
 
-    # -- loop ------------------------------------------------------------
     def handle_event(self, event):
         if event.type != pygame.KEYDOWN:
             return
@@ -101,9 +98,7 @@ class HubScene(Scene):
         self.dialogue.update(dt)
         self.narrator.update(dt)
 
-    # -- draw ------------------------------------------------------------
     def draw(self, screen):
-        # bleak red-black gradient
         screen.fill((14, 8, 9))
         glow = pygame.Surface((config.WIDTH, config.HEIGHT), pygame.SRCALPHA)
         r = 120 + int(20 * math.sin(self.t))
@@ -111,7 +106,6 @@ class HubScene(Scene):
                             (config.WIDTH // 2 - r, -80, r * 2, 360))
         screen.blit(glow, (0, 0))
 
-        # the boss, looming and faintly breathing
         bob = math.sin(self.t * 0.8) * 6
         sway = math.sin(self.t * 1.1) * 4
         boss = self.boss.copy()

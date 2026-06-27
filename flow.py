@@ -25,7 +25,6 @@ def _line(d):
                 color=d.get("color", color))
 
 
-# ---------------------------------------------------------------------------
 class TitleScene(Scene):
     def on_enter(self, **kwargs):
         sound.music("title")
@@ -44,7 +43,6 @@ class TitleScene(Scene):
         self.game.go("hub" if self.game.flags["intro_seen"] else "intro")
 
     def _new(self):
-        # The player thinks this is a fresh start. The soul carries over.
         self.game.flags.new_life()
         self.game.go("intro")
 
@@ -72,7 +70,6 @@ class TitleScene(Scene):
         screen.fill((7, 8, 12))
         self.particles.draw(screen)
 
-        # rotating spiral behind the title
         cx, cy = config.WIDTH // 2, 215
         pts = []
         for k in range(90):
@@ -101,7 +98,6 @@ class TitleScene(Scene):
             ui.text(screen, config.font(26), ("> " if sel else "  ") + label,
                     col, cx, 430 + i * 50, center=True)
 
-        # the meta-hint: faint, deniable, only after a past life
         if self.game.flags["lives"] and self.game.flags["lives"] > 0:
             a = int(40 + 30 * math.sin(self.t * 1.3))
             ui.text(screen, config.font(15), "(you have been here before)",
@@ -110,7 +106,6 @@ class TitleScene(Scene):
         world.draw_vignette(screen)
 
 
-# ---------------------------------------------------------------------------
 class IntroScene(Scene):
     """Wraps the original opening cutscene (kept as-is)."""
 
@@ -123,7 +118,7 @@ class IntroScene(Scene):
     def _finish(self):
         if not self._left:
             self._left = True
-            self.game.go("hub")     # the boss speaks his intro in the hub
+            self.game.go("hub")
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
@@ -145,7 +140,6 @@ class IntroScene(Scene):
                 center=True, alpha=a, shadow=False)
 
 
-# ---------------------------------------------------------------------------
 class TrappedScene(Scene):
     """Caught by the Keepers — trapped in the Troi forever.
 
@@ -211,7 +205,6 @@ class TrappedScene(Scene):
         screen.fill((4, 4, 7))
         self.particles.draw(screen)
 
-        # a dead, closed rift
         pygame.draw.ellipse(screen, (40, 44, 50), self.dead_rift, 2)
         ui.text(screen, config.font(15), "the rift is closed", (60, 64, 70),
                 self.dead_rift.centerx, self.dead_rift.bottom + 10, center=True)
@@ -230,7 +223,6 @@ class TrappedScene(Scene):
                 config.WIDTH // 2, 14, center=True)
         self.narrator.draw(screen)
 
-        # the only exit
         a = int(120 + 90 * math.sin(self.t * 2))
         ui.text(screen, config.font(17), "There is no way out.  Press Q or Esc to give up.",
                 config.ASH, config.WIDTH // 2, config.HEIGHT - 40, center=True, alpha=a)
@@ -239,7 +231,6 @@ class TrappedScene(Scene):
         self.dialogue.draw(screen)
 
 
-# ---------------------------------------------------------------------------
 class EndingScene(Scene):
     """The loop closes. You were always the boss."""
 
@@ -296,7 +287,6 @@ class EndingScene(Scene):
         world.draw_vignette(screen)
 
 
-# ---------------------------------------------------------------------------
 class AchievementsScene(Scene):
     """The soul's ledger — what this player has done across all lives."""
 
@@ -338,7 +328,6 @@ class AchievementsScene(Scene):
                 ui.text(screen, config.font(15), a["desc"], config.DIM,
                         x + 44, y + 30, shadow=False)
             else:
-                # locked: keep it a mystery until earned
                 ui.text(screen, config.font(23), "[ ]  ? ? ?",
                         (70, 72, 80), x, y)
                 ui.text(screen, config.font(15), "locked", (58, 60, 68),
