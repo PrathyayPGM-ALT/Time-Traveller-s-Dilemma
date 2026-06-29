@@ -7,25 +7,36 @@ import pygame
 import config
 
 
+import random
+
 def wavy_text(screen, font, s, color, x, y, center=False, alpha=255,
-              amp=3.0, speed=11.0):
-    """Render text with a per-character vertical wave (Undertale-style shake)
-    for aggressive lines. Assumes a monospace font (IBM Plex Mono)."""
+               intensity=2):
+    
+
     cw = font.size("M")[0]
+
     if center:
         x -= (cw * len(s)) // 2
-    t = pygame.time.get_ticks() / 1000.0
+
     for i, ch in enumerate(s):
         if ch == " ":
             continue
-        dy = math.sin(t * speed + i * 0.55) * amp
+
+        # Random offset every frame
+        dx = random.randint(-intensity, intensity)
+        dy = random.randint(-intensity, intensity)
+
+        # Shadow
         sh = font.render(ch, True, (0, 0, 0))
         sh.set_alpha(min(alpha, 150))
-        screen.blit(sh, (x + i * cw + 2, y + dy + 2))
+        screen.blit(sh, (x + i * cw + dx + 2, y + dy + 2))
+
+        # Main character
         g = font.render(ch, True, color)
         if alpha < 255:
             g.set_alpha(alpha)
-        screen.blit(g, (x + i * cw, y + dy))
+
+        screen.blit(g, (x + i * cw + dx, y + dy))
 
 
 def text(screen, font, s, color, x, y, center=False, right=False,
